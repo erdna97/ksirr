@@ -738,6 +738,9 @@
         });
 
         function generateAndPrintReceipt(saleData) {
+            const cashierName = saleData.userEmail.split('@')[0];
+            const displayName = cashierName.charAt(0).toUpperCase() + cashierName.slice(1);
+
             const itemsHtml = saleData.items.map(item => `
                 <tr>
                     <td style="text-align: left; padding: 2px 0;">${item.name} (x${item.quantity})</td>
@@ -750,7 +753,7 @@
                     <h3 style="text-align: center; margin: 0; font-size: 14px;">Toko Anda</h3>
                     <p style="text-align: center; margin: 0; font-size: 10px;">Jalan Contoh No. 123</p>
                     <hr style="border: 0; border-top: 1px dashed #000; margin: 5px 0;">
-                    <p style="margin: 0;">Kasir: ${saleData.userEmail}</p>
+                    <p style="margin: 0;">Kasir: ${displayName}</p>
                     <p style="margin: 0;">Tanggal: ${saleData.createdAt.toLocaleString('id-ID')}</p>
                     <hr style="border: 0; border-top: 1px dashed #000; margin: 5px 0;">
                     <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
@@ -765,12 +768,11 @@
             `;
             receiptToPrint.innerHTML = receiptHtml;
             
-            // Logika baru yang lebih andal
             receiptToPrint.classList.remove('hidden');
             
             window.onafterprint = () => {
                 receiptToPrint.classList.add('hidden');
-                window.onafterprint = null; // Membersihkan event handler
+                window.onafterprint = null; 
             };
 
             window.print();
