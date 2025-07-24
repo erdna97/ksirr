@@ -1,0 +1,1080 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aplikasi Kasir Online</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .modal { display: none; }
+        .modal.active { display: flex; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        /* Animasi untuk Toast */
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeOut { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(-20px); } }
+        .toast-in { animation: fadeIn 0.3s ease-out forwards; }
+        .toast-out { animation: fadeOut 0.3s ease-in forwards; }
+        .nav-btn.active { background-color: #3B82F6; color: white; }
+        .payment-method-btn {
+            transition: all 0.2s ease-in-out;
+        }
+        .payment-method-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        /* CSS untuk Cetak Struk */
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            #receipt-to-print, #receipt-to-print * {
+                visibility: visible;
+            }
+            #receipt-to-print {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800">
+
+    <!-- Container Utama -->
+    <div id="app-container">
+
+        <!-- Layar Login -->
+        <div id="login-screen" class="min-h-screen flex items-center justify-center bg-gray-200">
+            <div class="bg-white p-8 rounded-xl shadow-lg w-full max-w-sm">
+                <h2 class="text-2xl font-bold text-center text-gray-700 mb-6">Login Kasir</h2>
+                <form id="login-form">
+                    <div class="mb-4">
+                        <label for="email" class="block text-sm font-medium text-gray-600 mb-1">Email</label>
+                        <input type="email" id="email" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required value="kasir@example.com">
+                    </div>
+                    <div class="mb-6">
+                        <label for="password" class="block text-sm font-medium text-gray-600 mb-1">Password</label>
+                        <input type="password" id="password" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required value="123456">
+                    </div>
+                    <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition duration-300 font-semibold">Login</button>
+                    <p id="login-error" class="text-red-500 text-sm mt-4 text-center"></p>
+                    <p class="text-xs text-gray-500 mt-4 text-center">Gunakan email: kasir@example.com & pass: 123456 untuk demo.</p>
+                </form>
+            </div>
+        </div>
+
+        <!-- Layar Aplikasi Utama (setelah login) -->
+        <div id="main-app" class="hidden">
+            <header class="bg-white shadow-md p-4 flex justify-between items-center sticky top-0 z-20">
+                <h1 class="text-xl font-bold text-blue-600">KasirKu</h1>
+                <div class="flex items-center space-x-2 bg-gray-200 rounded-lg p-1">
+                    <button id="nav-cashier" class="nav-btn px-4 py-1.5 text-sm font-semibold rounded-md transition-colors duration-300">Kasir</button>
+                    <button id="nav-stock" class="nav-btn px-4 py-1.5 text-sm font-semibold rounded-md transition-colors duration-300">Manajemen Stok</button>
+                    <button id="nav-history" class="nav-btn px-4 py-1.5 text-sm font-semibold rounded-md transition-colors duration-300">Histori</button>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <div class="text-sm text-right">
+                        <div class="font-medium">Kasir</div>
+                        <div id="user-email" class="text-gray-600"></div>
+                    </div>
+                    <button id="logout-btn" class="bg-red-500 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-red-600 transition">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </button>
+                </div>
+            </header>
+
+            <!-- Halaman Kasir -->
+            <main id="cashier-page" class="flex flex-col lg:flex-row gap-6 p-6">
+                <div class="lg:w-3/5">
+                    <div class="bg-white p-4 rounded-xl shadow-lg h-full">
+                       <div class="flex justify-between items-center mb-4">
+                         <h2 class="text-lg font-bold">Katalog Produk</h2>
+                         <div class="w-2/5">
+                            <input type="text" id="product-search" placeholder="Cari produk..." class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500">
+                         </div>
+                       </div>
+                        <div id="product-list" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-4 max-h-[75vh] overflow-y-auto pr-2"></div>
+                    </div>
+                </div>
+                <div class="lg:w-2/5">
+                    <div class="bg-white rounded-xl shadow-lg sticky top-24">
+                        <h2 class="text-lg font-bold p-4 border-b">Keranjang</h2>
+                        <div id="cart-items" class="p-4 space-y-3 max-h-[60vh] overflow-y-auto no-scrollbar">
+                            <p id="cart-empty-msg" class="text-gray-500 text-center py-8">Keranjang kosong</p>
+                        </div>
+                        <div class="p-4 border-t bg-gray-50 rounded-b-xl">
+                            <div class="flex justify-between items-center font-bold text-lg mb-4">
+                                <span>Total</span>
+                                <span id="cart-total">Rp 0</span>
+                            </div>
+                            <button id="checkout-btn" class="w-full bg-green-500 text-white py-3 rounded-lg font-bold hover:bg-green-600 transition disabled:bg-gray-400 disabled:cursor-not-allowed">
+                                <i class="fas fa-cash-register mr-2"></i>Bayar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </main>
+
+            <!-- Halaman Manajemen Stok -->
+            <div id="stock-page" class="hidden p-6">
+                <div class="bg-white rounded-xl shadow-lg p-6">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-2xl font-bold text-gray-800">Manajemen Stok Produk</h2>
+                        <div class="flex items-center space-x-4">
+                            <button id="view-archive-btn" class="bg-gray-200 text-gray-700 rounded-lg px-4 py-2 flex items-center justify-center hover:bg-gray-300 transition">
+                                <i class="fas fa-archive mr-2"></i>Lihat Arsip
+                            </button>
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 flex items-center pl-3"><i class="fas fa-search text-gray-400"></i></span>
+                                <input type="text" id="stock-search-input" placeholder="Cari produk..." class="w-full max-w-xs pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500">
+                            </div>
+                            <button id="add-product-btn" class="bg-blue-600 text-white rounded-full w-10 h-10 flex items-center justify-center hover:bg-blue-700 transition shadow-lg" title="Tambah Produk Baru">
+                               <i class="fas fa-plus"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto"><table class="w-full text-sm text-left text-gray-500"><thead class="text-xs text-gray-700 uppercase bg-gray-100"><tr><th scope="col" class="px-6 py-3">Nama Produk</th><th scope="col" class="px-6 py-3">Harga</th><th scope="col" class="px-6 py-3">Stok</th><th scope="col" class="px-6 py-3 text-center">Aksi</th></tr></thead><tbody id="stock-table-body"></tbody></table></div>
+                </div>
+            </div>
+
+            <!-- Halaman Histori -->
+            <div id="history-page" class="hidden p-6">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- Histori Transaksi -->
+                    <div class="bg-white rounded-xl shadow-lg p-6">
+                        <h2 class="text-xl font-bold text-gray-800 mb-4">Histori Transaksi</h2>
+                        <div class="flex space-x-2 mb-2"><input type="date" id="transaction-start-date" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"><input type="date" id="transaction-end-date" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"></div>
+                        <input type="text" id="transaction-search-input" placeholder="Cari produk atau kasir..." class="w-full mb-4 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500">
+                        <div id="transaction-history-list" class="space-y-4 max-h-[65vh] overflow-y-auto pr-2"></div>
+                    </div>
+                    <!-- Histori Aktivitas -->
+                    <div class="space-y-6">
+                        <div class="bg-white rounded-xl shadow-lg p-6">
+                            <h2 class="text-xl font-bold text-gray-800 mb-4">Histori Login</h2>
+                            <div class="flex space-x-2 mb-2"><input type="date" id="login-start-date" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"><input type="date" id="login-end-date" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"></div>
+                            <input type="text" id="login-search-input" placeholder="Cari berdasarkan email..." class="w-full mb-4 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500">
+                            <div id="login-history-list" class="space-y-2 max-h-40 overflow-y-auto pr-2"></div>
+                        </div>
+                        <div class="bg-white rounded-xl shadow-lg p-6">
+                            <h2 class="text-xl font-bold text-gray-800 mb-4">Histori Perubahan Stok</h2>
+                            <div class="flex space-x-2 mb-2"><input type="date" id="stock-history-start-date" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"><input type="date" id="stock-history-end-date" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"></div>
+                            <input type="text" id="stock-history-search-input" placeholder="Cari produk atau kasir..." class="w-full mb-4 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500">
+                            <div id="stock-history-list" class="space-y-2 max-h-40 overflow-y-auto pr-2"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal untuk Form Produk -->
+    <div id="product-modal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center z-30"><div class="bg-white p-8 rounded-xl shadow-2xl w-full max-w-md transform transition-all" id="product-modal-content"><div class="flex justify-between items-center mb-6"><h3 id="modal-title" class="text-2xl font-bold">Tambah Produk Baru</h3><button id="close-modal-btn" class="text-gray-500 hover:text-gray-800 text-2xl">&times;</button></div><form id="product-form"><input type="hidden" id="product-id"><div class="mb-4"><label for="product-name" class="block text-sm font-medium text-gray-600 mb-1">Nama Produk</label><input type="text" id="product-name" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required></div><div class="mb-4"><label for="product-price" class="block text-sm font-medium text-gray-600 mb-1">Harga</label><input type="number" id="product-price" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required min="0"></div><div class="mb-6"><label for="product-stock" class="block text-sm font-medium text-gray-600 mb-1">Stok</label><input type="number" id="product-stock" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required min="0"></div><button type="submit" id="save-product-btn" class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition font-semibold">Simpan Produk</button></form></div></div>
+    <!-- Modal Arsip -->
+    <div id="archive-modal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center z-40"><div class="bg-white p-8 rounded-xl shadow-2xl w-full max-w-2xl transform transition-all"><div class="flex justify-between items-center mb-6"><h3 class="text-2xl font-bold">Arsip Produk</h3><button id="close-archive-modal-btn" class="text-gray-500 hover:text-gray-800 text-2xl">&times;</button></div><div id="archive-list" class="max-h-[60vh] overflow-y-auto"></div></div></div>
+    <!-- Modal Konfirmasi -->
+    <div id="confirm-modal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center z-50"><div class="bg-white p-6 rounded-lg shadow-xl w-full max-w-sm text-center"><h3 id="confirm-title" class="text-lg font-semibold mb-4">Konfirmasi</h3><p id="confirm-message" class="text-gray-600 mb-6">Apakah Anda yakin?</p><div class="flex justify-center space-x-4"><button id="confirm-cancel" class="bg-gray-300 text-gray-800 px-6 py-2 rounded-lg hover:bg-gray-400">Batal</button><button id="confirm-ok" class="bg-red-500 text-white px-6 py-2 rounded-lg hover:bg-red-600">Yakin</button></div></div></div>
+    <!-- Modal Metode Pembayaran -->
+    <div id="payment-modal" class="modal fixed inset-0 bg-black bg-opacity-60 items-center justify-center z-40">
+        <div class="bg-white p-8 rounded-xl shadow-2xl w-full max-w-lg text-center transform transition-all scale-95 opacity-0" id="payment-modal-content">
+            <h3 class="text-2xl font-bold mb-2">Pilih Metode Pembayaran</h3>
+            <p class="text-gray-600 mb-6">Total Belanja: <span id="payment-total" class="font-bold"></span></p>
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                <button data-method="Tunai" class="payment-method-btn flex flex-col items-center justify-center p-4 border rounded-lg hover:bg-blue-50"><i class="fas fa-money-bill-wave text-3xl text-green-500 mb-2"></i><span class="font-semibold">Tunai</span></button>
+                <button data-method="QRIS" class="payment-method-btn flex flex-col items-center justify-center p-4 border rounded-lg hover:bg-blue-50"><i class="fas fa-qrcode text-3xl text-gray-800 mb-2"></i><span class="font-semibold">QRIS</span></button>
+                <button data-method="Debit" class="payment-method-btn flex flex-col items-center justify-center p-4 border rounded-lg hover:bg-blue-50"><i class="fas fa-credit-card text-3xl text-blue-600 mb-2"></i><span class="font-semibold">Debit</span></button>
+                <button data-method="Lainnya" class="payment-method-btn flex flex-col items-center justify-center p-4 border rounded-lg hover:bg-blue-50"><i class="fas fa-ellipsis-h text-3xl text-gray-500 mb-2"></i><span class="font-semibold">Lainnya</span></button>
+            </div>
+            <button id="cancel-payment-btn" class="mt-8 text-sm text-gray-500 hover:text-gray-800">Batalkan</button>
+        </div>
+    </div>
+    <!-- Modal Sukses Transaksi & Cetak -->
+    <div id="success-modal" class="modal fixed inset-0 bg-black bg-opacity-60 items-center justify-center z-50">
+        <div class="bg-white p-8 rounded-xl shadow-2xl w-full max-w-md text-center transform transition-all">
+            <div class="text-green-500 mb-4"><i class="fas fa-check-circle fa-4x"></i></div>
+            <h3 class="text-2xl font-bold mb-2">Transaksi Berhasil!</h3>
+            <p class="text-gray-600 mb-8">Apa yang ingin Anda lakukan selanjutnya?</p>
+            <div class="flex justify-center space-x-4">
+                <button id="print-receipt-btn" class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700"><i class="fas fa-print mr-2"></i>Cetak Struk</button>
+                <button id="close-success-modal-btn" class="bg-gray-300 text-gray-800 px-6 py-3 rounded-lg hover:bg-gray-400">Tutup</button>
+            </div>
+        </div>
+    </div>
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="fixed top-5 right-5 z-50 space-y-2"></div>
+
+    <!-- Area Cetak Struk (Tersembunyi) -->
+    <div id="receipt-to-print"></div>
+
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        // Konfigurasi Firebase Anda
+        const firebaseConfig = {
+            apiKey: "AIzaSyBsktLPsZzOi0M--ID3ModiviFqXtzdcQ8",
+            authDomain: "ksirr-8ec69.firebaseapp.com",
+            projectId: "ksirr-8ec69",
+            storageBucket: "ksirr-8ec69.firebasestorage.app",
+            messagingSenderId: "683266419077",
+            appId: "1:683266419077:web:02b074ac26e43e06077cec"
+        };
+
+        // Import fungsi yang diperlukan dari Firebase SDK
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { 
+            getAuth, 
+            onAuthStateChanged, 
+            signInWithEmailAndPassword, 
+            createUserWithEmailAndPassword,
+            signOut 
+        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { 
+            getFirestore, 
+            collection, 
+            doc, 
+            addDoc, 
+            setDoc,
+            updateDoc,
+            onSnapshot, 
+            query, 
+            writeBatch,
+            serverTimestamp,
+            orderBy,
+            where
+        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Inisialisasi Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // State aplikasi
+        let currentUser = null;
+        let productsUnsubscribe = null;
+        let archiveUnsubscribe = null;
+        let salesUnsubscribe = null;
+        let loginHistoryUnsubscribe = null;
+        let stockHistoryUnsubscribe = null;
+        let cart = [];
+        let allProducts = [];
+        let allSales = [], allLogins = [], allStockChanges = [];
+        let lastTransaction = null;
+        let isInitialLoad = true;
+
+        // Referensi DOM
+        const loginScreen = document.getElementById('login-screen');
+        const mainApp = document.getElementById('main-app');
+        const loginForm = document.getElementById('login-form');
+        const loginError = document.getElementById('login-error');
+        const userEmailDisplay = document.getElementById('user-email');
+        const logoutBtn = document.getElementById('logout-btn');
+        const productList = document.getElementById('product-list');
+        const cartItems = document.getElementById('cart-items');
+        const cartEmptyMsg = document.getElementById('cart-empty-msg');
+        const cartTotalDisplay = document.getElementById('cart-total');
+        const checkoutBtn = document.getElementById('checkout-btn');
+        const addProductBtn = document.getElementById('add-product-btn');
+        const productModal = document.getElementById('product-modal');
+        const productModalContent = document.getElementById('product-modal-content');
+        const closeModalBtn = document.getElementById('close-modal-btn');
+        const productForm = document.getElementById('product-form');
+        const modalTitle = document.getElementById('modal-title');
+        const productIdInput = document.getElementById('product-id');
+        const productNameInput = document.getElementById('product-name');
+        const productPriceInput = document.getElementById('product-price');
+        const productStockInput = document.getElementById('product-stock');
+        const productSearchInput = document.getElementById('product-search');
+        const stockSearchInput = document.getElementById('stock-search-input');
+        const toastContainer = document.getElementById('toast-container');
+        const stockTableBody = document.getElementById('stock-table-body');
+        
+        // Navigasi & Halaman
+        const cashierPage = document.getElementById('cashier-page');
+        const stockPage = document.getElementById('stock-page');
+        const historyPage = document.getElementById('history-page');
+        const navCashierBtn = document.getElementById('nav-cashier');
+        const navStockBtn = document.getElementById('nav-stock');
+        const navHistoryBtn = document.getElementById('nav-history');
+        const transactionHistoryList = document.getElementById('transaction-history-list');
+        const loginHistoryList = document.getElementById('login-history-list');
+        const stockHistoryList = document.getElementById('stock-history-list');
+
+        // Filter Histori
+        const transactionSearchInput = document.getElementById('transaction-search-input');
+        const loginSearchInput = document.getElementById('login-search-input');
+        const stockHistorySearchInput = document.getElementById('stock-history-search-input');
+        const transactionStartDate = document.getElementById('transaction-start-date');
+        const transactionEndDate = document.getElementById('transaction-end-date');
+        const loginStartDate = document.getElementById('login-start-date');
+        const loginEndDate = document.getElementById('login-end-date');
+        const stockHistoryStartDate = document.getElementById('stock-history-start-date');
+        const stockHistoryEndDate = document.getElementById('stock-history-end-date');
+        
+        // Modal Pembayaran
+        const paymentModal = document.getElementById('payment-modal');
+        const paymentModalContent = document.getElementById('payment-modal-content');
+        const paymentTotal = document.getElementById('payment-total');
+        const cancelPaymentBtn = document.getElementById('cancel-payment-btn');
+
+        // Arsip
+        const viewArchiveBtn = document.getElementById('view-archive-btn');
+        const archiveModal = document.getElementById('archive-modal');
+        const closeArchiveModalBtn = document.getElementById('close-archive-modal-btn');
+        const archiveList = document.getElementById('archive-list');
+
+        // Modal Sukses & Cetak
+        const successModal = document.getElementById('success-modal');
+        const closeSuccessModalBtn = document.getElementById('close-success-modal-btn');
+        const printReceiptBtn = document.getElementById('print-receipt-btn');
+        const receiptToPrint = document.getElementById('receipt-to-print');
+
+        // --- FUNGSI UTILITAS ---
+        const formatCurrency = (amount) => {
+            return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(amount);
+        };
+        
+        const formatTimestamp = (timestamp) => {
+            if (!timestamp) return 'N/A';
+            const date = timestamp.toDate();
+            return date.toLocaleString('id-ID', {
+                dateStyle: 'medium',
+                timeStyle: 'short'
+            });
+        };
+
+        function showToast(message, type = 'success') {
+            const toast = document.createElement('div');
+            const bgColor = type === 'success' ? 'bg-green-500' : 'bg-red-500';
+            toast.className = `toast-in text-white px-6 py-3 rounded-lg shadow-lg ${bgColor}`;
+            toast.textContent = message;
+            toastContainer.appendChild(toast);
+
+            setTimeout(() => {
+                toast.classList.remove('toast-in');
+                toast.classList.add('toast-out');
+                toast.addEventListener('animationend', () => { toast.remove(); });
+            }, 3000);
+        }
+
+        // --- FUNGSI KONFIRMASI ---
+        const confirmModal = document.getElementById('confirm-modal');
+        const confirmTitle = document.getElementById('confirm-title');
+        const confirmMessage = document.getElementById('confirm-message');
+        const confirmOkBtn = document.getElementById('confirm-ok');
+        const confirmCancelBtn = document.getElementById('confirm-cancel');
+
+        function showConfirmation(title, message) {
+            return new Promise((resolve) => {
+                confirmTitle.textContent = title;
+                confirmMessage.textContent = message;
+                confirmModal.classList.add('active');
+                confirmOkBtn.onclick = () => { confirmModal.classList.remove('active'); resolve(true); };
+                confirmCancelBtn.onclick = () => { confirmModal.classList.remove('active'); resolve(false); };
+            });
+        }
+
+        // --- FUNGSI NAVIGASI HALAMAN ---
+        function clearAllListeners() {
+            if (productsUnsubscribe) productsUnsubscribe();
+            if (archiveUnsubscribe) archiveUnsubscribe();
+            if (salesUnsubscribe) salesUnsubscribe();
+            if (loginHistoryUnsubscribe) loginHistoryUnsubscribe();
+            if (stockHistoryUnsubscribe) stockHistoryUnsubscribe();
+        }
+
+        function navigateTo(page) {
+            clearAllListeners();
+            cashierPage.style.display = 'none';
+            stockPage.classList.add('hidden');
+            historyPage.classList.add('hidden');
+            navCashierBtn.classList.remove('active');
+            navStockBtn.classList.remove('active');
+            navHistoryBtn.classList.remove('active');
+
+            if (page === 'cashier') {
+                cashierPage.style.display = 'flex';
+                navCashierBtn.classList.add('active');
+                fetchProducts();
+            } else if (page === 'stock') {
+                stockPage.classList.remove('hidden');
+                navStockBtn.classList.add('active');
+                fetchProducts();
+            } else if (page === 'history') {
+                historyPage.classList.remove('hidden');
+                navHistoryBtn.classList.add('active');
+                fetchHistoryData();
+            }
+        }
+
+        navCashierBtn.addEventListener('click', () => navigateTo('cashier'));
+        navStockBtn.addEventListener('click', () => navigateTo('stock'));
+        navHistoryBtn.addEventListener('click', () => navigateTo('history'));
+
+
+        // --- FUNGSI AUTENTIKASI ---
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                currentUser = user;
+                loginScreen.style.display = 'none';
+                mainApp.style.display = 'block';
+                userEmailDisplay.textContent = user.email;
+                logActivity('login');
+                navigateTo('cashier');
+            } else {
+                currentUser = null;
+                loginScreen.style.display = 'flex';
+                mainApp.style.display = 'none';
+                clearAllListeners();
+                cart = [];
+                renderCart();
+                isInitialLoad = true;
+            }
+        });
+
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = loginForm.email.value;
+            const password = loginForm.password.value;
+            loginError.textContent = '';
+            try {
+                await signInWithEmailAndPassword(auth, email, password);
+            } catch (error) {
+                if (error.code === 'auth/user-not-found') {
+                    try {
+                        await createUserWithEmailAndPassword(auth, email, password);
+                    } catch (creationError) {
+                        loginError.textContent = 'Gagal membuat akun: ' + creationError.message;
+                    }
+                } else {
+                    loginError.textContent = 'Login gagal: ' + error.message;
+                }
+            }
+        });
+
+        logoutBtn.addEventListener('click', async () => {
+             const confirmed = await showConfirmation('Konfirmasi Logout', 'Anda yakin ingin keluar dari sesi ini?');
+             if (confirmed) {
+                await logActivity('logout');
+                await signOut(auth);
+             }
+        });
+        
+        async function logActivity(event) {
+            if (!currentUser) return;
+            try {
+                await addDoc(collection(db, 'loginHistory'), {
+                    userId: currentUser.uid,
+                    email: currentUser.email,
+                    event: event,
+                    timestamp: serverTimestamp()
+                });
+            } catch (error) {
+                console.error("Gagal mencatat aktivitas:", error);
+            }
+        }
+
+        // --- FUNGSI PRODUK & STOK ---
+        async function addDummyProducts() {
+            const dummyProducts = [
+                { name: "Kopi Susu Gula Aren", price: 18000, stock: 50, status: 'aktif' },
+                { name: "Americano", price: 15000, stock: 40, status: 'aktif' },
+                { name: "Teh Tarik", price: 12000, stock: 60, status: 'aktif' },
+                { name: "Roti Bakar Coklat Keju", price: 22000, stock: 30, status: 'aktif' },
+                { name: "Kentang Goreng", price: 15000, stock: 45, status: 'aktif' },
+                { name: "Nasi Goreng Spesial", price: 25000, stock: 25, status: 'aktif' },
+                { name: "Air Mineral", price: 5000, stock: 100, status: 'aktif' },
+                { name: "Croissant Coklat", price: 17000, stock: 20, status: 'aktif' }
+            ];
+            const batch = writeBatch(db);
+            dummyProducts.forEach(productData => {
+                const productRef = doc(collection(db, 'products'));
+                batch.set(productRef, productData);
+                const stockHistoryRef = doc(collection(db, 'stockHistory'));
+                batch.set(stockHistoryRef, { 
+                    productId: productRef.id, 
+                    productName: productData.name, 
+                    change: productData.stock, 
+                    newStock: productData.stock, 
+                    reason: 'Stok Awal (Dummy)', 
+                    timestamp: serverTimestamp(), 
+                    userEmail: 'system' 
+                });
+            });
+            await batch.commit();
+            showToast('Produk dummy berhasil ditambahkan!');
+        }
+
+        function fetchProducts() {
+            const q = query(collection(db, 'products'), where('status', '==', 'aktif'));
+            productsUnsubscribe = onSnapshot(q, (snapshot) => {
+                let products = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                products.sort((a, b) => a.name.localeCompare(b.name));
+                allProducts = products;
+
+                if (isInitialLoad && allProducts.length === 0) {
+                    addDummyProducts();
+                }
+                isInitialLoad = false;
+                renderProducts(allProducts);
+                renderStockTable(allProducts);
+            });
+        }
+        
+        function renderProducts(productsToRender) {
+            productList.innerHTML = '';
+            if (productsToRender.length === 0) {
+                productList.innerHTML = `<p class="col-span-full text-center text-gray-500 py-8">Belum ada produk. Tambahkan di Manajemen Stok.</p>`;
+                return;
+            }
+            productsToRender.forEach(product => {
+                const productEl = document.createElement('div');
+                productEl.className = `border rounded-lg p-3 flex flex-col justify-between cursor-pointer hover:shadow-lg hover:border-blue-500 transition ${product.stock === 0 ? 'bg-gray-200 opacity-60' : 'bg-white'}`;
+                productEl.innerHTML = `<div><div class="font-bold text-sm truncate">${product.name}</div><div class="text-blue-600 font-semibold text-xs">${formatCurrency(product.price)}</div></div><div class="text-xs text-gray-500 mt-2">Stok: ${product.stock}</div>`;
+                if (product.stock > 0) {
+                    productEl.addEventListener('click', () => addToCart(product.id));
+                }
+                productList.appendChild(productEl);
+            });
+        }
+
+        function renderStockTable(productsToRender) {
+            stockTableBody.innerHTML = '';
+             if (productsToRender.length === 0) {
+                 stockTableBody.innerHTML = '<tr><td colspan="4" class="text-center text-gray-500 py-8">Produk tidak ditemukan atau belum ada.</td></tr>';
+                 return;
+            }
+            productsToRender.forEach(p => {
+                const stockLevelClass = p.stock < 10 ? 'text-red-500 font-bold' : 'text-gray-900';
+                const row = document.createElement('tr');
+                row.className = 'bg-white border-b hover:bg-gray-50';
+                row.innerHTML = `<td class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">${p.name}</td><td class="px-6 py-4">${formatCurrency(p.price)}</td><td class="px-6 py-4 ${stockLevelClass}">${p.stock}</td><td class="px-6 py-4 text-center space-x-2"><button class="edit-product-btn font-medium text-blue-600 hover:underline" data-id="${p.id}">Edit</button><button class="archive-product-btn font-medium text-yellow-600 hover:underline" data-id="${p.id}">Arsipkan</button></td>`;
+                stockTableBody.appendChild(row);
+            });
+            attachStockActionListeners();
+        }
+        
+        function attachStockActionListeners() {
+            document.querySelectorAll('.edit-product-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const id = e.currentTarget.dataset.id;
+                    const product = allProducts.find(p => p.id === id);
+                    if (product) {
+                        openProductModal();
+                        productIdInput.value = id;
+                        productNameInput.value = product.name;
+                        productPriceInput.value = product.price;
+                        productStockInput.value = product.stock;
+                        modalTitle.textContent = 'Edit Produk';
+                    }
+                });
+            });
+            document.querySelectorAll('.archive-product-btn').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    const id = e.currentTarget.dataset.id;
+                    const product = allProducts.find(p => p.id === id);
+                    const confirmed = await showConfirmation('Arsipkan Produk', `Anda yakin ingin mengarsipkan produk "${product.name}"? Produk ini akan disembunyikan dari daftar.`);
+                    if(confirmed) {
+                        try {
+                            const productRef = doc(db, 'products', id);
+                            await updateDoc(productRef, { status: 'diarsipkan' });
+                            showToast('Produk berhasil diarsipkan.');
+                        } catch (error) {
+                            console.error("Gagal mengarsipkan produk:", error);
+                            showToast('Gagal mengarsipkan produk.', 'error');
+                        }
+                    }
+                });
+            });
+        }
+        
+        productSearchInput.addEventListener('input', (e) => {
+            const searchTerm = e.target.value.toLowerCase();
+            const filteredProducts = allProducts.filter(p => p.name.toLowerCase().includes(searchTerm));
+            renderProducts(filteredProducts);
+        });
+        
+        stockSearchInput.addEventListener('input', (e) => {
+            const searchTerm = e.target.value.toLowerCase();
+            const filteredProducts = allProducts.filter(p => p.name.toLowerCase().includes(searchTerm));
+            renderStockTable(filteredProducts);
+        });
+
+        // --- FUNGSI KERANJANG (CART) ---
+        function addToCart(productId) {
+            const product = allProducts.find(p => p.id === productId);
+            if (!product) return;
+            const cartItem = cart.find(item => item.id === productId);
+            if (cartItem) {
+                if (cartItem.quantity < product.stock) {
+                    cartItem.quantity++;
+                } else {
+                    showToast('Stok tidak mencukupi!', 'error');
+                }
+            } else {
+                if (product.stock > 0) {
+                    cart.push({ ...product, quantity: 1 });
+                } else {
+                     showToast('Stok produk habis!', 'error');
+                }
+            }
+            renderCart();
+        }
+
+        function updateCartItemQuantity(productId, newQuantity) {
+            const cartItem = cart.find(item => item.id === productId);
+            const product = allProducts.find(p => p.id === productId);
+            if (!cartItem || !product) return;
+            if (newQuantity <= 0) {
+                cart = cart.filter(item => item.id !== productId);
+            } else if (newQuantity > product.stock) {
+                showToast('Stok tidak mencukupi!', 'error');
+                cartItem.quantity = product.stock;
+            } else {
+                cartItem.quantity = newQuantity;
+            }
+            renderCart();
+        }
+
+        function renderCart() {
+            cartItems.innerHTML = '';
+            if (cart.length === 0) {
+                cartItems.appendChild(cartEmptyMsg);
+                cartEmptyMsg.style.display = 'block';
+                checkoutBtn.disabled = true;
+            } else {
+                cartEmptyMsg.style.display = 'none';
+                cart.forEach(item => {
+                    const itemEl = document.createElement('div');
+                    itemEl.className = 'flex justify-between items-center text-sm';
+                    itemEl.innerHTML = `<div><p class="font-semibold truncate w-32">${item.name}</p><p class="text-gray-600">${formatCurrency(item.price)}</p></div><div class="flex items-center space-x-2"><input type="number" value="${item.quantity}" min="1" max="${item.stock}" class="w-14 text-center border rounded-md py-1 quantity-input" data-id="${item.id}"><button class="text-red-500 hover:text-red-700 remove-item-btn text-lg" data-id="${item.id}">&times;</button></div>`;
+                    cartItems.appendChild(itemEl);
+                });
+                checkoutBtn.disabled = false;
+            }
+            document.querySelectorAll('.quantity-input').forEach(input => {
+                input.addEventListener('change', (e) => { updateCartItemQuantity(e.target.dataset.id, parseInt(e.target.value)); });
+            });
+            document.querySelectorAll('.remove-item-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => { updateCartItemQuantity(e.target.dataset.id, 0); });
+            });
+            const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            cartTotalDisplay.textContent = formatCurrency(total);
+        }
+
+        // --- FUNGSI CHECKOUT & PEMBAYARAN ---
+        checkoutBtn.addEventListener('click', () => {
+            if (cart.length === 0) return;
+            const totalAmount = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            paymentTotal.textContent = formatCurrency(totalAmount);
+            paymentModal.classList.add('active');
+            setTimeout(() => paymentModalContent.classList.remove('scale-95', 'opacity-0'), 10);
+        });
+
+        cancelPaymentBtn.addEventListener('click', () => {
+            paymentModalContent.classList.add('scale-95', 'opacity-0');
+            setTimeout(() => paymentModal.classList.remove('active'), 200);
+        });
+
+        document.querySelectorAll('.payment-method-btn').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                const method = e.currentTarget.dataset.method;
+                await processTransaction(method);
+            });
+        });
+
+        async function processTransaction(paymentMethod) {
+            paymentModal.classList.remove('active');
+            const transactionData = {
+                userId: currentUser.uid, 
+                userEmail: currentUser.email, 
+                items: cart, 
+                totalAmount: cart.reduce((sum, item) => sum + (item.price * item.quantity), 0), 
+                paymentMethod: paymentMethod, 
+                createdAt: serverTimestamp() 
+            };
+            lastTransaction = { ...transactionData, createdAt: new Date() }; // Simpan data untuk cetak
+
+            const batch = writeBatch(db);
+            const saleRef = doc(collection(db, 'sales'));
+            batch.set(saleRef, transactionData);
+
+            cart.forEach(item => {
+                const productRef = doc(db, 'products', item.id);
+                const newStock = item.stock - item.quantity;
+                batch.update(productRef, { stock: newStock });
+                const stockHistoryRef = doc(collection(db, 'stockHistory'));
+                batch.set(stockHistoryRef, { 
+                    productId: item.id, 
+                    productName: item.name, 
+                    change: -item.quantity, 
+                    newStock: newStock, 
+                    reason: `Penjualan (${paymentMethod})`, 
+                    timestamp: serverTimestamp(), 
+                    userEmail: currentUser.email 
+                });
+            });
+
+            try {
+                await batch.commit();
+                cart = [];
+                renderCart();
+                successModal.classList.add('active');
+            } catch (error) {
+                console.error("Gagal melakukan checkout: ", error);
+                showToast('Transaksi gagal, silakan coba lagi.', 'error');
+            }
+        }
+        
+        closeSuccessModalBtn.addEventListener('click', () => successModal.classList.remove('active'));
+        printReceiptBtn.addEventListener('click', () => {
+            if(lastTransaction) {
+                generateAndPrintReceipt(lastTransaction);
+            }
+        });
+
+        function generateAndPrintReceipt(saleData) {
+            const itemsHtml = saleData.items.map(item => `
+                <tr>
+                    <td style="text-align: left; padding: 2px 0;">${item.name} (x${item.quantity})</td>
+                    <td style="text-align: right; padding: 2px 0;">${formatCurrency(item.price * item.quantity)}</td>
+                </tr>
+            `).join('');
+
+            const receiptHtml = `
+                <div style="width: 280px; font-family: 'Courier New', Courier, monospace; font-size: 12px; color: #000; padding: 5px;">
+                    <h3 style="text-align: center; margin: 0; font-size: 14px;">Toko Anda</h3>
+                    <p style="text-align: center; margin: 0; font-size: 10px;">Jalan Contoh No. 123</p>
+                    <hr style="border: 0; border-top: 1px dashed #000; margin: 5px 0;">
+                    <p style="margin: 0;">Kasir: ${saleData.userEmail}</p>
+                    <p style="margin: 0;">Tanggal: ${saleData.createdAt.toLocaleString('id-ID')}</p>
+                    <hr style="border: 0; border-top: 1px dashed #000; margin: 5px 0;">
+                    <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
+                        <tbody>${itemsHtml}</tbody>
+                    </table>
+                    <hr style="border: 0; border-top: 1px dashed #000; margin: 5px 0;">
+                    <p style="text-align: right; margin: 0;"><strong>Total: ${formatCurrency(saleData.totalAmount)}</strong></p>
+                    <p style="text-align: right; margin: 0; font-size: 11px;">Metode: ${saleData.paymentMethod}</p>
+                    <hr style="border: 0; border-top: 1px dashed #000; margin: 5px 0;">
+                    <p style="text-align: center; margin-top: 10px; font-size: 11px;">Terima kasih!</p>
+                </div>
+            `;
+            receiptToPrint.innerHTML = receiptHtml;
+            
+            // Logika baru yang lebih andal
+            receiptToPrint.classList.remove('hidden');
+            
+            window.onafterprint = () => {
+                receiptToPrint.classList.add('hidden');
+                window.onafterprint = null; // Membersihkan event handler
+            };
+
+            window.print();
+        }
+
+        // --- FUNGSI MANAJEMEN PRODUK (MODAL) ---
+        function openProductModal() {
+            productModal.classList.add('active');
+            productModalContent.classList.remove('opacity-0', 'scale-95');
+            resetProductForm();
+        }
+
+        function closeProductModal() {
+            productModalContent.classList.add('opacity-0', 'scale-95');
+            setTimeout(() => { productModal.classList.remove('active'); }, 300);
+        }
+
+        addProductBtn.addEventListener('click', openProductModal);
+        closeModalBtn.addEventListener('click', closeProductModal);
+
+        function resetProductForm() {
+            productForm.reset();
+            productIdInput.value = '';
+            modalTitle.textContent = 'Tambah Produk Baru';
+            productNameInput.focus();
+        }
+
+        productForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = productIdInput.value;
+            const name = productNameInput.value;
+            const price = parseInt(productPriceInput.value);
+            const stock = parseInt(productStockInput.value);
+            const productData = { name, price, stock, status: 'aktif' };
+
+            try {
+                if (id) { // Edit produk
+                    const originalProduct = allProducts.find(p => p.id === id);
+                    if (!originalProduct) {
+                        showToast('Produk asli tidak ditemukan!', 'error');
+                        return;
+                    }
+                    const oldStock = originalProduct.stock;
+                    const changeAmount = stock - oldStock;
+
+                    const batch = writeBatch(db);
+                    const productRef = doc(db, 'products', id);
+                    batch.update(productRef, { name, price, stock }); // Hanya update field ini, jangan status
+
+                    if (changeAmount !== 0) {
+                        const stockHistoryRef = doc(collection(db, 'stockHistory'));
+                        batch.set(stockHistoryRef, {
+                            productId: id,
+                            productName: name,
+                            change: changeAmount,
+                            newStock: stock,
+                            reason: 'Stok Diperbarui',
+                            timestamp: serverTimestamp(),
+                            userEmail: currentUser.email
+                        });
+                    }
+                    
+                    await batch.commit();
+                    showToast('Produk berhasil diperbarui!');
+
+                } else { // Tambah produk baru
+                    const batch = writeBatch(db);
+                    const newProductRef = doc(collection(db, 'products'));
+                    batch.set(newProductRef, productData);
+                    
+                    const stockHistoryRef = doc(collection(db, 'stockHistory'));
+                    batch.set(stockHistoryRef, {
+                        productId: newProductRef.id,
+                        productName: name,
+                        change: stock,
+                        newStock: stock,
+                        reason: 'Stok Awal',
+                        timestamp: serverTimestamp(),
+                        userEmail: currentUser.email
+                    });
+
+                    await batch.commit();
+                    showToast('Produk baru berhasil ditambahkan!');
+                }
+                closeProductModal();
+            } catch (error) {
+                console.error("Gagal menyimpan produk: ", error);
+                showToast('Gagal menyimpan produk.', 'error');
+            }
+        });
+
+        // --- FUNGSI ARSIP ---
+        viewArchiveBtn.addEventListener('click', () => {
+            archiveModal.classList.add('active');
+            fetchArchivedProducts();
+        });
+
+        closeArchiveModalBtn.addEventListener('click', () => {
+            archiveModal.classList.remove('active');
+            if (archiveUnsubscribe) archiveUnsubscribe();
+        });
+
+        function fetchArchivedProducts() {
+            const q = query(collection(db, 'products'), where('status', '==', 'diarsipkan'));
+            archiveUnsubscribe = onSnapshot(q, (snapshot) => {
+                let archived = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                archived.sort((a,b) => a.name.localeCompare(b.name));
+                renderArchiveList(archived);
+            });
+        }
+
+        function renderArchiveList(archived) {
+            archiveList.innerHTML = '';
+            if (archived.length === 0) {
+                archiveList.innerHTML = '<p class="text-center text-gray-500 py-8">Tidak ada produk yang diarsipkan.</p>';
+                return;
+            }
+            const table = document.createElement('table');
+            table.className = 'w-full text-sm text-left';
+            table.innerHTML = `
+                <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+                    <tr>
+                        <th class="px-4 py-2">Nama Produk</th>
+                        <th class="px-4 py-2">Harga</th>
+                        <th class="px-4 py-2">Stok</th>
+                        <th class="px-4 py-2 text-center">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            `;
+            const tbody = table.querySelector('tbody');
+            archived.forEach(p => {
+                const row = document.createElement('tr');
+                row.className = 'bg-white border-b hover:bg-gray-50';
+                row.innerHTML = `
+                    <td class="px-4 py-2 font-medium">${p.name}</td>
+                    <td class="px-4 py-2">${formatCurrency(p.price)}</td>
+                    <td class="px-4 py-2">${p.stock}</td>
+                    <td class="px-4 py-2 text-center">
+                        <button class="restore-product-btn font-medium text-green-600 hover:underline" data-id="${p.id}">Pulihkan</button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+            archiveList.appendChild(table);
+
+            document.querySelectorAll('.restore-product-btn').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    const id = e.currentTarget.dataset.id;
+                    const productRef = doc(db, 'products', id);
+                    try {
+                        await updateDoc(productRef, { status: 'aktif' });
+                        showToast('Produk berhasil dipulihkan.');
+                    } catch (error) {
+                        showToast('Gagal memulihkan produk.', 'error');
+                    }
+                });
+            });
+        }
+
+        // --- FUNGSI HISTORI & FILTER ---
+        function fetchHistoryData() {
+            const salesQuery = query(collection(db, 'sales'), orderBy('createdAt', 'desc'));
+            salesUnsubscribe = onSnapshot(salesQuery, (snapshot) => {
+                allSales = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                filterAndRenderTransactions();
+            });
+
+            const loginQuery = query(collection(db, 'loginHistory'), orderBy('timestamp', 'desc'));
+            loginHistoryUnsubscribe = onSnapshot(loginQuery, (snapshot) => {
+                allLogins = snapshot.docs.map(doc => doc.data());
+                filterAndRenderLogins();
+            });
+
+            const stockQuery = query(collection(db, 'stockHistory'), orderBy('timestamp', 'desc'));
+            stockHistoryUnsubscribe = onSnapshot(stockQuery, (snapshot) => {
+                allStockChanges = snapshot.docs.map(doc => doc.data());
+                filterAndRenderStockHistory();
+            });
+        }
+
+        function applyFilters(data, dateStartEl, dateEndEl, searchEl, dateField, searchFields) {
+            const startDate = dateStartEl.value ? new Date(dateStartEl.value).setHours(0, 0, 0, 0) : null;
+            const endDate = dateEndEl.value ? new Date(dateEndEl.value).setHours(23, 59, 59, 999) : null;
+            const searchTerm = searchEl.value.toLowerCase();
+
+            return data.filter(item => {
+                const itemDate = item[dateField]?.toDate();
+                if (!itemDate) return false;
+
+                const dateMatch = (!startDate || itemDate >= startDate) && (!endDate || itemDate <= endDate);
+                if (!dateMatch) return false;
+
+                if (searchTerm) {
+                    return searchFields.some(field => {
+                        if (Array.isArray(item[field])) { // For transaction items
+                            return item[field].some(subItem => subItem.name.toLowerCase().includes(searchTerm));
+                        }
+                        return item[field]?.toLowerCase().includes(searchTerm);
+                    });
+                }
+                return true;
+            });
+        }
+
+        function filterAndRenderTransactions() {
+            const filtered = applyFilters(allSales, transactionStartDate, transactionEndDate, transactionSearchInput, 'createdAt', ['items', 'userEmail']);
+            renderTransactionHistory(filtered);
+        }
+
+        function filterAndRenderLogins() {
+            const filtered = applyFilters(allLogins, loginStartDate, loginEndDate, loginSearchInput, 'timestamp', ['email']);
+            renderLoginHistory(filtered);
+        }
+
+        function filterAndRenderStockHistory() {
+            const filtered = applyFilters(allStockChanges, stockHistoryStartDate, stockHistoryEndDate, stockHistorySearchInput, 'timestamp', ['productName', 'userEmail']);
+            renderStockHistory(filtered);
+        }
+
+        [transactionSearchInput, transactionStartDate, transactionEndDate].forEach(el => el.addEventListener('input', filterAndRenderTransactions));
+        [loginSearchInput, loginStartDate, loginEndDate].forEach(el => el.addEventListener('input', filterAndRenderLogins));
+        [stockHistorySearchInput, stockHistoryStartDate, stockHistoryEndDate].forEach(el => el.addEventListener('input', filterAndRenderStockHistory));
+
+        function renderTransactionHistory(sales) {
+            transactionHistoryList.innerHTML = '';
+            if (sales.length === 0) {
+                transactionHistoryList.innerHTML = '<p class="text-center text-gray-500 py-4">Tidak ada transaksi yang cocok.</p>';
+                return;
+            }
+            sales.forEach(sale => {
+                const saleCard = document.createElement('div');
+                saleCard.className = 'bg-gray-50 border rounded-lg p-4';
+                
+                const itemsHtml = sale.items.map(item => `
+                    <li class="flex justify-between text-sm">
+                        <span>${item.name} (x${item.quantity})</span>
+                        <span>${formatCurrency(item.price * item.quantity)}</span>
+                    </li>
+                `).join('');
+
+                const paymentMethodBadge = `<span class="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full text-blue-600 bg-blue-200">${sale.paymentMethod}</span>`;
+
+                saleCard.innerHTML = `
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="font-bold text-blue-600">${formatCurrency(sale.totalAmount)}</span>
+                        ${paymentMethodBadge}
+                    </div>
+                    <p class="text-xs text-gray-600 mb-2">Kasir: ${sale.userEmail} - ${formatTimestamp(sale.createdAt)}</p>
+                    <ul class="space-y-1 border-t pt-2 mt-2">${itemsHtml}</ul>
+                `;
+                transactionHistoryList.appendChild(saleCard);
+            });
+        }
+
+        function renderLoginHistory(logins) {
+            loginHistoryList.innerHTML = '';
+            if (logins.length === 0) {
+                loginHistoryList.innerHTML = '<p class="text-center text-gray-500 py-4">Tidak ada aktivitas login yang cocok.</p>';
+                return;
+            }
+            logins.forEach(login => {
+                const eventClass = login.event === 'login' ? 'text-green-500' : 'text-red-500';
+                const item = document.createElement('div');
+                item.className = 'text-sm flex justify-between items-center';
+                item.innerHTML = `
+                    <div>
+                        <span class="font-medium">${login.email}</span>
+                        <span class="ml-2 capitalize ${eventClass}">${login.event}</span>
+                    </div>
+                    <span class="text-xs text-gray-500">${formatTimestamp(login.timestamp)}</span>
+                `;
+                loginHistoryList.appendChild(item);
+            });
+        }
+
+        function renderStockHistory(stocks) {
+            stockHistoryList.innerHTML = '';
+            if (stocks.length === 0) {
+                stockHistoryList.innerHTML = '<p class="text-center text-gray-500 py-4">Tidak ada perubahan stok yang cocok.</p>';
+                return;
+            }
+            stocks.forEach(stock => {
+                const change = parseInt(stock.change);
+                const changeClass = change > 0 ? 'text-green-500' : 'text-red-500';
+                const changeSign = change > 0 ? '+' : '';
+
+                const item = document.createElement('div');
+                item.className = 'text-sm p-2 rounded-md hover:bg-gray-50';
+                item.innerHTML = `
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <span class="font-medium">${stock.productName}</span>
+                            <span class="ml-2 font-bold ${changeClass}">${changeSign}${change}</span>
+                            <span class="text-xs text-gray-500 ml-1">(Stok baru: ${stock.newStock})</span>
+                        </div>
+                        <span class="text-xs text-gray-500">${formatTimestamp(stock.timestamp)}</span>
+                    </div>
+                    <div class="text-xs text-gray-600 mt-1">Oleh: ${stock.userEmail || 'N/A'} - <span class="italic">${stock.reason}</span></div>
+                `;
+                stockHistoryList.appendChild(item);
+            });
+        }
+        
+    </script>
+</body>
+</html>
