@@ -49,23 +49,57 @@
     <!-- Container Utama -->
     <div id="app-container">
 
-        <!-- Layar Login -->
-        <div id="login-screen" class="min-h-screen flex items-center justify-center bg-gray-200">
+        <!-- Layar Login & Registrasi -->
+        <div id="auth-screen" class="min-h-screen flex items-center justify-center bg-gray-200">
             <div class="bg-white p-8 rounded-xl shadow-lg w-full max-w-sm">
-                <h2 class="text-2xl font-bold text-center text-gray-700 mb-6">Login Kasir</h2>
-                <form id="login-form">
-                    <div class="mb-4">
-                        <label for="email" class="block text-sm font-medium text-gray-600 mb-1">Email</label>
-                        <input type="email" id="email" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required value="kasir@example.com">
-                    </div>
-                    <div class="mb-6">
-                        <label for="password" class="block text-sm font-medium text-gray-600 mb-1">Password</label>
-                        <input type="password" id="password" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required value="123456">
-                    </div>
-                    <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition duration-300 font-semibold">Login</button>
-                    <p id="login-error" class="text-red-500 text-sm mt-4 text-center"></p>
-                    <p class="text-xs text-gray-500 mt-4 text-center">Gunakan email: kasir@example.com & pass: 123456 untuk demo.</p>
-                </form>
+                <!-- Form Login -->
+                <div id="login-container">
+                    <h2 class="text-2xl font-bold text-center text-gray-700 mb-6">Login Kasir</h2>
+                    <form id="login-form">
+                        <div class="mb-4">
+                            <label for="login-username" class="block text-sm font-medium text-gray-600 mb-1">Username</label>
+                            <input type="text" id="login-username" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                        </div>
+                        <div class="mb-6">
+                            <label for="login-password" class="block text-sm font-medium text-gray-600 mb-1">Password</label>
+                            <input type="password" id="login-password" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                        </div>
+                        <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition duration-300 font-semibold">Login</button>
+                        <p id="login-error" class="text-red-500 text-sm mt-4 text-center"></p>
+                    </form>
+                    <p class="text-center text-sm mt-6">
+                        Belum punya akun? <button id="show-register-btn" class="font-semibold text-blue-600 hover:underline">Daftar di sini</button>
+                    </p>
+                </div>
+
+                <!-- Form Registrasi -->
+                <div id="register-container" class="hidden">
+                    <h2 class="text-2xl font-bold text-center text-gray-700 mb-6">Registrasi Akun</h2>
+                    <form id="register-form">
+                        <div class="mb-4">
+                            <label for="register-username" class="block text-sm font-medium text-gray-600 mb-1">Username</label>
+                            <input type="text" id="register-username" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                        </div>
+                        <div class="mb-4">
+                            <label for="register-email" class="block text-sm font-medium text-gray-600 mb-1">Email</label>
+                            <input type="email" id="register-email" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                        </div>
+                        <div class="mb-4">
+                            <label for="register-password" class="block text-sm font-medium text-gray-600 mb-1">Password</label>
+                            <input type="password" id="register-password" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                        </div>
+                        <div class="mb-6">
+                            <label for="register-code" class="block text-sm font-medium text-gray-600 mb-1">Kode Registrasi</label>
+                            <input type="text" id="register-code" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required placeholder="Contoh: 209">
+                            <p class="text-xs text-gray-500 mt-1">Minta kode dari pemilik.</p>
+                        </div>
+                        <button type="submit" class="w-full bg-green-500 text-white py-2 rounded-lg hover:bg-green-600 transition duration-300 font-semibold">Daftar</button>
+                        <p id="register-error" class="text-red-500 text-sm mt-4 text-center"></p>
+                    </form>
+                    <p class="text-center text-sm mt-6">
+                        Sudah punya akun? <button id="show-login-btn" class="font-semibold text-blue-600 hover:underline">Login di sini</button>
+                    </p>
+                </div>
             </div>
         </div>
 
@@ -80,8 +114,8 @@
                 </div>
                 <div class="flex items-center space-x-4">
                     <div class="text-sm text-right">
-                        <div class="font-medium">Kasir</div>
-                        <div id="user-email" class="text-gray-600"></div>
+                        <div id="user-name-display" class="font-medium">Kasir</div>
+                        <div id="user-email-display" class="text-gray-600"></div>
                     </div>
                     <button id="logout-btn" class="bg-red-500 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-red-600 transition">
                         <i class="fas fa-sign-out-alt"></i>
@@ -96,7 +130,7 @@
                        <div class="flex justify-between items-center mb-4">
                          <h2 class="text-lg font-bold">Katalog Produk</h2>
                          <div class="w-2/5">
-                            <input type="text" id="product-search" placeholder="Cari produk..." class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500">
+                            <input type="text" id="product-search" placeholder="Cari atau Pindai Barcode..." class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500">
                          </div>
                        </div>
                         <div id="product-list" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-4 max-h-[75vh] overflow-y-auto pr-2"></div>
@@ -139,7 +173,7 @@
                             </button>
                         </div>
                     </div>
-                    <div class="overflow-x-auto"><table class="w-full text-sm text-left text-gray-500"><thead class="text-xs text-gray-700 uppercase bg-gray-100"><tr><th scope="col" class="px-6 py-3">Nama Produk</th><th scope="col" class="px-6 py-3">Harga</th><th scope="col" class="px-6 py-3">Stok</th><th scope="col" class="px-6 py-3 text-center">Aksi</th></tr></thead><tbody id="stock-table-body"></tbody></table></div>
+                    <div class="overflow-x-auto"><table class="w-full text-sm text-left text-gray-500"><thead class="text-xs text-gray-700 uppercase bg-gray-100"><tr><th scope="col" class="px-6 py-3">Nama Produk</th><th scope="col" class="px-6 py-3">Barcode</th><th scope="col" class="px-6 py-3">Harga</th><th scope="col" class="px-6 py-3">Stok</th><th scope="col" class="px-6 py-3 text-center">Aksi</th></tr></thead><tbody id="stock-table-body"></tbody></table></div>
                 </div>
             </div>
 
@@ -174,7 +208,7 @@
     </div>
 
     <!-- Modal untuk Form Produk -->
-    <div id="product-modal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center z-30"><div class="bg-white p-8 rounded-xl shadow-2xl w-full max-w-md transform transition-all" id="product-modal-content"><div class="flex justify-between items-center mb-6"><h3 id="modal-title" class="text-2xl font-bold">Tambah Produk Baru</h3><button id="close-modal-btn" class="text-gray-500 hover:text-gray-800 text-2xl">&times;</button></div><form id="product-form"><input type="hidden" id="product-id"><div class="mb-4"><label for="product-name" class="block text-sm font-medium text-gray-600 mb-1">Nama Produk</label><input type="text" id="product-name" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required></div><div class="mb-4"><label for="product-price" class="block text-sm font-medium text-gray-600 mb-1">Harga</label><input type="number" id="product-price" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required min="0"></div><div class="mb-6"><label for="product-stock" class="block text-sm font-medium text-gray-600 mb-1">Stok</label><input type="number" id="product-stock" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required min="0"></div><button type="submit" id="save-product-btn" class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition font-semibold">Simpan Produk</button></form></div></div>
+    <div id="product-modal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center z-30"><div class="bg-white p-8 rounded-xl shadow-2xl w-full max-w-md transform transition-all" id="product-modal-content"><div class="flex justify-between items-center mb-6"><h3 id="modal-title" class="text-2xl font-bold">Tambah Produk Baru</h3><button id="close-modal-btn" class="text-gray-500 hover:text-gray-800 text-2xl">&times;</button></div><form id="product-form"><input type="hidden" id="product-id"><div class="mb-4"><label for="product-name" class="block text-sm font-medium text-gray-600 mb-1">Nama Produk</label><input type="text" id="product-name" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required></div><div class="mb-4"><label for="product-barcode" class="block text-sm font-medium text-gray-600 mb-1">Kode Barcode (Opsional)</label><input type="text" id="product-barcode" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"></div><div class="mb-4"><label for="product-price" class="block text-sm font-medium text-gray-600 mb-1">Harga</label><input type="number" id="product-price" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required min="0"></div><div class="mb-6"><label for="product-stock" class="block text-sm font-medium text-gray-600 mb-1">Stok</label><input type="number" id="product-stock" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required min="0"></div><button type="submit" id="save-product-btn" class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition font-semibold">Simpan Produk</button></form></div></div>
     <!-- Modal Arsip -->
     <div id="archive-modal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center z-40"><div class="bg-white p-8 rounded-xl shadow-2xl w-full max-w-2xl transform transition-all"><div class="flex justify-between items-center mb-6"><h3 class="text-2xl font-bold">Arsip Produk</h3><button id="close-archive-modal-btn" class="text-gray-500 hover:text-gray-800 text-2xl">&times;</button></div><div id="archive-list" class="max-h-[60vh] overflow-y-auto"></div></div></div>
     <!-- Modal Konfirmasi -->
@@ -237,6 +271,8 @@
             getFirestore, 
             collection, 
             doc, 
+            getDoc,
+            getDocs,
             addDoc, 
             setDoc,
             updateDoc,
@@ -255,6 +291,7 @@
 
         // State aplikasi
         let currentUser = null;
+        let currentUserDetails = null;
         let productsUnsubscribe = null;
         let archiveUnsubscribe = null;
         let salesUnsubscribe = null;
@@ -267,11 +304,18 @@
         let isInitialLoad = true;
 
         // Referensi DOM
-        const loginScreen = document.getElementById('login-screen');
+        const authScreen = document.getElementById('auth-screen');
         const mainApp = document.getElementById('main-app');
+        const loginContainer = document.getElementById('login-container');
+        const registerContainer = document.getElementById('register-container');
         const loginForm = document.getElementById('login-form');
+        const registerForm = document.getElementById('register-form');
         const loginError = document.getElementById('login-error');
-        const userEmailDisplay = document.getElementById('user-email');
+        const registerError = document.getElementById('register-error');
+        const showRegisterBtn = document.getElementById('show-register-btn');
+        const showLoginBtn = document.getElementById('show-login-btn');
+        const userNameDisplay = document.getElementById('user-name-display');
+        const userEmailDisplay = document.getElementById('user-email-display');
         const logoutBtn = document.getElementById('logout-btn');
         const productList = document.getElementById('product-list');
         const cartItems = document.getElementById('cart-items');
@@ -288,6 +332,7 @@
         const productNameInput = document.getElementById('product-name');
         const productPriceInput = document.getElementById('product-price');
         const productStockInput = document.getElementById('product-stock');
+        const productBarcodeInput = document.getElementById('product-barcode');
         const productSearchInput = document.getElementById('product-search');
         const stockSearchInput = document.getElementById('stock-search-input');
         const toastContainer = document.getElementById('toast-container');
@@ -399,6 +444,7 @@
             if (page === 'cashier') {
                 cashierPage.style.display = 'flex';
                 navCashierBtn.classList.add('active');
+                productSearchInput.focus();
                 fetchProducts();
             } else if (page === 'stock') {
                 stockPage.classList.remove('hidden');
@@ -415,19 +461,43 @@
         navStockBtn.addEventListener('click', () => navigateTo('stock'));
         navHistoryBtn.addEventListener('click', () => navigateTo('history'));
 
-
         // --- FUNGSI AUTENTIKASI ---
-        onAuthStateChanged(auth, (user) => {
+        showRegisterBtn.addEventListener('click', () => {
+            loginContainer.classList.add('hidden');
+            registerContainer.classList.remove('hidden');
+        });
+
+        showLoginBtn.addEventListener('click', () => {
+            registerContainer.classList.add('hidden');
+            loginContainer.classList.remove('hidden');
+        });
+
+        async function loadUserDetails(user) {
+            const userDocRef = doc(db, 'users', user.uid);
+            const userDoc = await getDoc(userDocRef);
+            if (userDoc.exists()) {
+                currentUserDetails = userDoc.data();
+                userNameDisplay.textContent = currentUserDetails.username;
+            } else {
+                const usernameFromEmail = user.email.split('@')[0];
+                userNameDisplay.textContent = usernameFromEmail.charAt(0).toUpperCase() + usernameFromEmail.slice(1);
+                currentUserDetails = { username: userNameDisplay.textContent, email: user.email };
+            }
+            userEmailDisplay.textContent = user.email;
+        }
+
+        onAuthStateChanged(auth, async (user) => {
             if (user) {
                 currentUser = user;
-                loginScreen.style.display = 'none';
+                await loadUserDetails(user);
+                authScreen.style.display = 'none';
                 mainApp.style.display = 'block';
-                userEmailDisplay.textContent = user.email;
                 logActivity('login');
                 navigateTo('cashier');
             } else {
                 currentUser = null;
-                loginScreen.style.display = 'flex';
+                currentUserDetails = null;
+                authScreen.style.display = 'flex';
                 mainApp.style.display = 'none';
                 clearAllListeners();
                 cart = [];
@@ -438,20 +508,73 @@
 
         loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            const email = loginForm.email.value;
-            const password = loginForm.password.value;
+            const username = loginForm['login-username'].value;
+            const password = loginForm['login-password'].value;
             loginError.textContent = '';
+
             try {
-                await signInWithEmailAndPassword(auth, email, password);
+                const q = query(collection(db, "users"), where("username", "==", username));
+                const querySnapshot = await getDocs(q);
+
+                if (querySnapshot.empty) {
+                    loginError.textContent = 'Username tidak ditemukan.';
+                    return;
+                }
+                
+                const userDoc = querySnapshot.docs[0];
+                const userEmail = userDoc.data().email;
+
+                await signInWithEmailAndPassword(auth, userEmail, password);
+
             } catch (error) {
-                if (error.code === 'auth/user-not-found') {
-                    try {
-                        await createUserWithEmailAndPassword(auth, email, password);
-                    } catch (creationError) {
-                        loginError.textContent = 'Gagal membuat akun: ' + creationError.message;
-                    }
+                loginError.textContent = 'Username atau password salah.';
+            }
+        });
+
+        registerForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const username = registerForm['register-username'].value;
+            const email = registerForm['register-email'].value;
+            const password = registerForm['register-password'].value;
+            const code = registerForm['register-code'].value;
+            registerError.textContent = '';
+
+            const now = new Date();
+            const hour = now.getHours();
+            const minute = now.getMinutes();
+            const correctCode = (hour * minute).toString();
+
+            if (code !== correctCode) {
+                registerError.textContent = 'Kode registrasi salah.';
+                return;
+            }
+
+            // Cek apakah username sudah ada
+            const usernameQuery = query(collection(db, "users"), where("username", "==", username));
+            const usernameSnapshot = await getDocs(usernameQuery);
+            if (!usernameSnapshot.empty) {
+                registerError.textContent = 'Username sudah digunakan.';
+                return;
+            }
+
+            try {
+                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                const user = userCredential.user;
+                
+                await setDoc(doc(db, "users", user.uid), {
+                    username: username,
+                    email: email
+                });
+
+                showToast('Registrasi berhasil!');
+                registerContainer.classList.add('hidden');
+                loginContainer.classList.remove('hidden');
+
+            } catch (error) {
+                if (error.code === 'auth/email-already-in-use') {
+                    registerError.textContent = 'Email sudah terdaftar.';
                 } else {
-                    loginError.textContent = 'Login gagal: ' + error.message;
+                    registerError.textContent = 'Gagal mendaftar: ' + error.message;
                 }
             }
         });
@@ -481,14 +604,14 @@
         // --- FUNGSI PRODUK & STOK ---
         async function addDummyProducts() {
             const dummyProducts = [
-                { name: "Kopi Susu Gula Aren", price: 18000, stock: 50, status: 'aktif' },
-                { name: "Americano", price: 15000, stock: 40, status: 'aktif' },
-                { name: "Teh Tarik", price: 12000, stock: 60, status: 'aktif' },
-                { name: "Roti Bakar Coklat Keju", price: 22000, stock: 30, status: 'aktif' },
-                { name: "Kentang Goreng", price: 15000, stock: 45, status: 'aktif' },
-                { name: "Nasi Goreng Spesial", price: 25000, stock: 25, status: 'aktif' },
-                { name: "Air Mineral", price: 5000, stock: 100, status: 'aktif' },
-                { name: "Croissant Coklat", price: 17000, stock: 20, status: 'aktif' }
+                { name: "Kopi Susu Gula Aren", price: 18000, stock: 50, status: 'aktif', barcode: '8992761134018' },
+                { name: "Americano", price: 15000, stock: 40, status: 'aktif', barcode: '8992761134025' },
+                { name: "Teh Tarik", price: 12000, stock: 60, status: 'aktif', barcode: '8992761134032' },
+                { name: "Roti Bakar Coklat Keju", price: 22000, stock: 30, status: 'aktif', barcode: '8992761134049' },
+                { name: "Kentang Goreng", price: 15000, stock: 45, status: 'aktif', barcode: '8992761134056' },
+                { name: "Nasi Goreng Spesial", price: 25000, stock: 25, status: 'aktif', barcode: '8992761134063' },
+                { name: "Air Mineral", price: 5000, stock: 100, status: 'aktif', barcode: '8992761134070' },
+                { name: "Croissant Coklat", price: 17000, stock: 20, status: 'aktif', barcode: '8992761134087' }
             ];
             const batch = writeBatch(db);
             dummyProducts.forEach(productData => {
@@ -502,7 +625,8 @@
                     newStock: productData.stock, 
                     reason: 'Stok Awal (Dummy)', 
                     timestamp: serverTimestamp(), 
-                    userEmail: 'system' 
+                    userEmail: 'system',
+                    userName: 'System'
                 });
             });
             await batch.commit();
@@ -545,14 +669,14 @@
         function renderStockTable(productsToRender) {
             stockTableBody.innerHTML = '';
              if (productsToRender.length === 0) {
-                 stockTableBody.innerHTML = '<tr><td colspan="4" class="text-center text-gray-500 py-8">Produk tidak ditemukan atau belum ada.</td></tr>';
+                 stockTableBody.innerHTML = '<tr><td colspan="5" class="text-center text-gray-500 py-8">Produk tidak ditemukan atau belum ada.</td></tr>';
                  return;
             }
             productsToRender.forEach(p => {
                 const stockLevelClass = p.stock < 10 ? 'text-red-500 font-bold' : 'text-gray-900';
                 const row = document.createElement('tr');
                 row.className = 'bg-white border-b hover:bg-gray-50';
-                row.innerHTML = `<td class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">${p.name}</td><td class="px-6 py-4">${formatCurrency(p.price)}</td><td class="px-6 py-4 ${stockLevelClass}">${p.stock}</td><td class="px-6 py-4 text-center space-x-2"><button class="edit-product-btn font-medium text-blue-600 hover:underline" data-id="${p.id}">Edit</button><button class="archive-product-btn font-medium text-yellow-600 hover:underline" data-id="${p.id}">Arsipkan</button></td>`;
+                row.innerHTML = `<td class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">${p.name}</td><td class="px-6 py-4 font-mono">${p.barcode || '-'}</td><td class="px-6 py-4">${formatCurrency(p.price)}</td><td class="px-6 py-4 ${stockLevelClass}">${p.stock}</td><td class="px-6 py-4 text-center space-x-2"><button class="edit-product-btn font-medium text-blue-600 hover:underline" data-id="${p.id}">Edit</button><button class="archive-product-btn font-medium text-yellow-600 hover:underline" data-id="${p.id}">Arsipkan</button></td>`;
                 stockTableBody.appendChild(row);
             });
             attachStockActionListeners();
@@ -567,6 +691,7 @@
                         openProductModal();
                         productIdInput.value = id;
                         productNameInput.value = product.name;
+                        productBarcodeInput.value = product.barcode || '';
                         productPriceInput.value = product.price;
                         productStockInput.value = product.stock;
                         modalTitle.textContent = 'Edit Produk';
@@ -594,13 +719,24 @@
         
         productSearchInput.addEventListener('input', (e) => {
             const searchTerm = e.target.value.toLowerCase();
+            
+            // Cek barcode dulu
+            const barcodeMatch = allProducts.find(p => p.barcode === searchTerm);
+            if (barcodeMatch) {
+                addToCart(barcodeMatch.id);
+                e.target.value = ''; // Kosongkan setelah scan
+                renderProducts(allProducts); // Tampilkan semua produk lagi
+                return;
+            }
+
+            // Jika bukan barcode, cari berdasarkan nama
             const filteredProducts = allProducts.filter(p => p.name.toLowerCase().includes(searchTerm));
             renderProducts(filteredProducts);
         });
         
         stockSearchInput.addEventListener('input', (e) => {
             const searchTerm = e.target.value.toLowerCase();
-            const filteredProducts = allProducts.filter(p => p.name.toLowerCase().includes(searchTerm));
+            const filteredProducts = allProducts.filter(p => p.name.toLowerCase().includes(searchTerm) || p.barcode?.includes(searchTerm));
             renderStockTable(filteredProducts);
         });
 
@@ -692,6 +828,7 @@
             const transactionData = {
                 userId: currentUser.uid, 
                 userEmail: currentUser.email, 
+                userName: currentUserDetails.username,
                 items: cart, 
                 totalAmount: cart.reduce((sum, item) => sum + (item.price * item.quantity), 0), 
                 paymentMethod: paymentMethod, 
@@ -715,7 +852,8 @@
                     newStock: newStock, 
                     reason: `Penjualan (${paymentMethod})`, 
                     timestamp: serverTimestamp(), 
-                    userEmail: currentUser.email 
+                    userEmail: currentUser.email,
+                    userName: currentUserDetails.username
                 });
             });
 
@@ -738,8 +876,7 @@
         });
 
         function generateAndPrintReceipt(saleData) {
-            const cashierName = saleData.userEmail.split('@')[0];
-            const displayName = cashierName.charAt(0).toUpperCase() + cashierName.slice(1);
+            const displayName = saleData.userName || saleData.userEmail.split('@')[0];
 
             const itemsHtml = saleData.items.map(item => `
                 <tr>
@@ -804,9 +941,10 @@
             e.preventDefault();
             const id = productIdInput.value;
             const name = productNameInput.value;
+            const barcode = productBarcodeInput.value;
             const price = parseInt(productPriceInput.value);
             const stock = parseInt(productStockInput.value);
-            const productData = { name, price, stock, status: 'aktif' };
+            const productData = { name, price, stock, status: 'aktif', barcode };
 
             try {
                 if (id) { // Edit produk
@@ -820,7 +958,7 @@
 
                     const batch = writeBatch(db);
                     const productRef = doc(db, 'products', id);
-                    batch.update(productRef, { name, price, stock }); // Hanya update field ini, jangan status
+                    batch.update(productRef, { name, price, stock, barcode });
 
                     if (changeAmount !== 0) {
                         const stockHistoryRef = doc(collection(db, 'stockHistory'));
@@ -831,7 +969,8 @@
                             newStock: stock,
                             reason: 'Stok Diperbarui',
                             timestamp: serverTimestamp(),
-                            userEmail: currentUser.email
+                            userEmail: currentUser.email,
+                            userName: currentUserDetails.username
                         });
                     }
                     
@@ -851,7 +990,8 @@
                         newStock: stock,
                         reason: 'Stok Awal',
                         timestamp: serverTimestamp(),
-                        userEmail: currentUser.email
+                        userEmail: currentUser.email,
+                        userName: currentUserDetails.username
                     });
 
                     await batch.commit();
@@ -979,7 +1119,7 @@
         }
 
         function filterAndRenderTransactions() {
-            const filtered = applyFilters(allSales, transactionStartDate, transactionEndDate, transactionSearchInput, 'createdAt', ['items', 'userEmail']);
+            const filtered = applyFilters(allSales, transactionStartDate, transactionEndDate, transactionSearchInput, 'createdAt', ['items', 'userName', 'userEmail']);
             renderTransactionHistory(filtered);
         }
 
@@ -989,7 +1129,7 @@
         }
 
         function filterAndRenderStockHistory() {
-            const filtered = applyFilters(allStockChanges, stockHistoryStartDate, stockHistoryEndDate, stockHistorySearchInput, 'timestamp', ['productName', 'userEmail']);
+            const filtered = applyFilters(allStockChanges, stockHistoryStartDate, stockHistoryEndDate, stockHistorySearchInput, 'timestamp', ['productName', 'userName', 'userEmail']);
             renderStockHistory(filtered);
         }
 
@@ -1021,7 +1161,7 @@
                         <span class="font-bold text-blue-600">${formatCurrency(sale.totalAmount)}</span>
                         ${paymentMethodBadge}
                     </div>
-                    <p class="text-xs text-gray-600 mb-2">Kasir: ${sale.userEmail} - ${formatTimestamp(sale.createdAt)}</p>
+                    <p class="text-xs text-gray-600 mb-2">Kasir: ${sale.userName || sale.userEmail} - ${formatTimestamp(sale.createdAt)}</p>
                     <ul class="space-y-1 border-t pt-2 mt-2">${itemsHtml}</ul>
                 `;
                 transactionHistoryList.appendChild(saleCard);
@@ -1071,7 +1211,7 @@
                         </div>
                         <span class="text-xs text-gray-500">${formatTimestamp(stock.timestamp)}</span>
                     </div>
-                    <div class="text-xs text-gray-600 mt-1">Oleh: ${stock.userEmail || 'N/A'} - <span class="italic">${stock.reason}</span></div>
+                    <div class="text-xs text-gray-600 mt-1">Oleh: ${stock.userName || stock.userEmail} - <span class="italic">${stock.reason}</span></div>
                 `;
                 stockHistoryList.appendChild(item);
             });
